@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora 3D — Custo de Impressão</title>
+<style>
+  :root {
+    --bg: #f4f1e8;
+    --card: #fffdf7;
+    --text: #20211f;
+    --muted: #73756f;
+    --border: #dedbd1;
+    --accent: #222;
+    --accentText: #fff;
+    --green: #2f7d52;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  .wrap { width: 100%; max-width: 900px; }
+  header { margin-bottom: 22px; }
+  .eyebrow {
+    font-size: 12px; font-weight: 800; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+  }
+  h1 { margin: 0; font-size: clamp(28px, 5vw, 44px); letter-spacing: -.04em; }
+  .subtitle { color: var(--muted); margin: 8px 0 0; }
+  .grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.04);
+  }
+  .card h2 { margin: 0 0 18px; font-size: 17px; }
+  .field { margin-bottom: 15px; }
+  label {
+    display: block; font-size: 13px; font-weight: 700; margin-bottom: 7px;
+  }
+  .input-wrap { position: relative; }
+  input, select {
+    width: 100%; border: 1px solid var(--border); border-radius: 11px;
+    background: #fff; color: var(--text); padding: 12px 13px;
+    font-size: 15px; outline: none;
+  }
+  input:focus, select:focus { border-color: #777; box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+  .unit {
+    position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 13px; pointer-events: none;
+  }
+  .hint { color: var(--muted); font-size: 11px; margin-top: 5px; }
+  .result-main {
+    background: var(--accent); color: var(--accentText);
+    border-radius: 16px; padding: 22px; margin-bottom: 14px;
+  }
+  .result-main .label { opacity: .7; font-size: 12px; font-weight: 700; }
+  .total { font-size: 40px; font-weight: 850; letter-spacing: -.04em; margin-top: 4px; }
+  .breakdown { display: grid; gap: 9px; }
+  .row {
+    display: flex; justify-content: space-between; gap: 20px;
+    padding-bottom: 9px; border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row span:first-child { color: var(--muted); }
+  .row strong { font-weight: 750; }
+  .formula {
+    margin-top: 16px; padding: 13px; border-radius: 11px;
+    background: #f1efe7; color: #565750; font-size: 12px; line-height: 1.5;
+  }
+  .preset {
+    width: 100%; border: 1px solid var(--border); background: #fff;
+    padding: 10px 12px; border-radius: 10px; cursor: pointer;
+    font-weight: 700; margin-bottom: 15px;
+  }
+  .preset:hover { background: #f3f1ea; }
+  .footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 18px; }
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: 1fr; }
+    body { padding: 22px 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">3D Print Calculator</div>
+    <h1>Custo da impressão</h1>
+    <p class="subtitle">Calcule filamento + energia e descubra quanto sua peça realmente custa.</p>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Dados da impressão</h2>
+      <button class="preset" onclick="loadPreset()">Usar Ender-3 V3 KE + exemplo da imagem</button>
+
+      <div class="field">
+        <label for="weight">Filamento usado</label>
+        <div class="input-wrap"><input id="weight" type="number" min="0" step="0.01" value="157.71"><span class="unit">g</span></div>
+      </div>
+
+      <div class="field">
+        <label for="filamentPrice">Preço do filamento</label>
+        <div class="input-wrap"><input id="filamentPrice" type="number" min="0" step="0.01" value="100"><span class="unit">R$/kg</span></div>
+      </div>
+
+      <div class="field">
+        <label>Tempo de impressão</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="input-wrap"><input id="timeHours" type="number" min="0" step="1" value="3"><span class="unit">h</span></div>
+          <div class="input-wrap"><input id="timeMinutes" type="number" min="0" max="59" step="1" value="44"><span class="unit">min</span></div>
+        </div>
+        <div class="hint">Digite diretamente, por exemplo: 3 h 44 min.</div>
+      </div>
+
+      <div class="field">
+        <label for="power">Potência considerada</label>
+        <div class="input-wrap"><input id="power" type="number" min="0" step="1" value="350"><span class="unit">W</span></div>
+        <div class="hint">350 W é a potência nominal usada neste exemplo.</div>
+      </div>
+
+      <div class="field">
+        <label for="energyPrice">Tarifa de energia</label>
+        <div class="input-wrap"><input id="energyPrice" type="number" min="0" step="0.001" value="0.851"><span class="unit">R$/kWh</span></div>
+      </div>
+
+      <div class="field">
+        <label for="profitPercent">Lucro sobre o custo</label>
+        <div class="input-wrap"><input id="profitPercent" type="number" min="0" step="1" value="30"><span class="unit">%</span></div>
+        <div class="hint">Percentual acrescentado ao custo para calcular o preço de venda.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Resultado</h2>
+      <div class="result-main">
+        <div class="label">PREÇO DE VENDA SUGERIDO</div>
+        <div class="total" id="salePrice">R$ 0,00</div>
+      </div>
+
+      <div class="breakdown">
+        <div class="row"><span>Custo total estimado</span><strong id="total">R$ 0,00</strong></div>
+        <div class="row"><span>Lucro estimado</span><strong id="profitValue">R$ 0,00</strong></div>
+        <div class="row"><span>Percentual de lucro</span><strong id="profitResult">30%</strong></div>
+        <div class="row"><span>Filamento</span><strong id="filamentCost">R$ 0,00</strong></div>
+        <div class="row"><span>Energia</span><strong id="energyCost">R$ 0,00</strong></div>
+        <div class="row"><span>Consumo estimado</span><strong id="energyKwh">0,000 kWh</strong></div>
+        <div class="row"><span>Peso da peça</span><strong id="weightResult">0 g</strong></div>
+        <div class="row"><span>Tempo</span><strong id="timeResult">0h 00min</strong></div>
+      </div>
+
+      <div class="formula">
+        <strong>Como é calculado:</strong><br>
+        Filamento = (gramas ÷ 1000) × preço/kg<br>
+        Energia = (W ÷ 1000) × horas × tarifa/kWh
+      </div>
+    </section>
+  </div>
+
+  <div class="footer">Os valores de energia são uma estimativa baseada na potência informada. O consumo real pode ser menor que a potência nominal.</div>
+</div>
+
+<script>
+const ids = ["weight","filamentPrice","timeHours","timeMinutes","power","energyPrice","profitPercent"];
+ids.forEach(id => document.getElementById(id).addEventListener("input", calculate));
+
+function money(v) {
+  return v.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+}
+function num(id) {
+  return parseFloat(document.getElementById(id).value) || 0;
+}
+function calculate() {
+  const weight = num("weight");
+  const filamentPrice = num("filamentPrice");
+  const timeHours = num("timeHours");
+  const timeMinutes = num("timeMinutes");
+  const hours = timeHours + (timeMinutes / 60);
+  const power = num("power");
+  const energyPrice = num("energyPrice");
+  const profitPercent = num("profitPercent");
+
+  const filamentCost = (weight / 1000) * filamentPrice;
+  const kwh = (power / 1000) * hours;
+  const energyCost = kwh * energyPrice;
+  const total = filamentCost + energyCost;
+  const profitValue = total * (profitPercent / 100);
+  const salePrice = total + profitValue;
+
+  document.getElementById("total").textContent = money(total);
+  document.getElementById("profitValue").textContent = money(profitValue);
+  document.getElementById("profitResult").textContent = profitPercent.toLocaleString("pt-BR") + "%";
+  document.getElementById("salePrice").textContent = money(salePrice);
+  document.getElementById("filamentCost").textContent = money(filamentCost);
+  document.getElementById("energyCost").textContent = money(energyCost);
+  document.getElementById("energyKwh").textContent = kwh.toFixed(3).replace(".", ",") + " kWh";
+  document.getElementById("weightResult").textContent = weight.toFixed(2).replace(".", ",") + " g";
+
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  document.getElementById("timeResult").textContent = h + "h " + String(m).padStart(2, "0") + "min";
+}
+function loadPreset() {
+  document.getElementById("weight").value = 157.71;
+  document.getElementById("filamentPrice").value = 100;
+  document.getElementById("timeHours").value = 3;
+  document.getElementById("timeMinutes").value = 44;
+  document.getElementById("power").value = 350;
+  document.getElementById("energyPrice").value = 0.851;
+  document.getElementById("profitPercent").value = 30;
+  calculate();
+}
+calculate();
+</script>
+</body>
+</html>
